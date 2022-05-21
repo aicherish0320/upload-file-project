@@ -20,10 +20,15 @@
         <el-input placeholder="请输入昵称" v-model="form.nickname"></el-input>
       </el-form-item>
       <el-form-item prop="password" label="密码">
-        <el-input placeholder="请输入密码" v-model="form.password"></el-input>
+        <el-input
+          type="password"
+          placeholder="请输入密码"
+          v-model="form.password"
+        ></el-input>
       </el-form-item>
       <el-form-item prop="rePassword" label="确认密码">
         <el-input
+          type="password"
           placeholder="请再次输入密码"
           v-model="form.rePassword"
         ></el-input>
@@ -45,10 +50,10 @@ export default {
   data() {
     return {
       form: {
-        email: '',
-        nickname: '',
-        password: '',
-        rePassword: '',
+        email: 'aic@aic.com',
+        nickname: 'aicherish',
+        password: '12345',
+        rePassword: '12345',
         captcha: '',
       },
       rules: {
@@ -102,9 +107,9 @@ export default {
       this.captchaUrl = `/api/captcha?_t=${new Date().getTime()}`
     },
     handleRegister() {
+      const { form } = this
       this.$refs.registerForm.validate(async (valid) => {
         if (valid) {
-          console.log('校验成功')
           // TODO 注册
           let params = {
             email: form.email,
