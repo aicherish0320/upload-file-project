@@ -5,16 +5,16 @@
         <span>
           <i class="el-icon-mobile"></i>
         </span>
-        <el-input placeholder="邮箱"></el-input>
+        <el-input placeholder="请输入邮箱"></el-input>
       </el-form-item>
       <el-form-item props="password">
         <span>
           <i class="el-icon-lock"></i>
         </span>
-        <el-input placeholder="密码"></el-input>
+        <el-input placeholder="请输入密码"></el-input>
       </el-form-item>
       <el-form-item props="captcha">
-        <el-input placeholder="验证码"></el-input>
+        <el-input placeholder="请输入验证码"></el-input>
         <img @click="updateCaptcha" :src="captchaUrl" alt="captcha" />
       </el-form-item>
     </el-form>
@@ -42,9 +42,4 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-.login-form {
-  width: 800px;
-  margin: 50px auto;
-}
-</style>
+<style lang="scss" scoped></style>
