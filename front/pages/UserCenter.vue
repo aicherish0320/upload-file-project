@@ -13,18 +13,28 @@
         :percentage="uploadProgress"
       ></el-progress>
     </div>
+    <div>
+      <p>计算哈希进度</p>
+      <el-progress
+        :stroke-width="20"
+        :text-inside="true"
+        :percentage="hashProgress"
+      ></el-progress>
+    </div>
 
     <el-button @click="uploadFile">上传</el-button>
   </div>
 </template>
 
 <script>
+const CHUNK_SIZE = 1 * 1024 * 1024
 export default {
   name: 'UserCenter',
   data() {
     return {
       file: null,
       uploadProgress: 0,
+      hashProgress: 0,
     }
   },
   async mounted() {
@@ -88,11 +98,44 @@ export default {
         (await this.isJpg(file))
       )
     },
-    async uploadFile() {
-      if (!(await this.isImage(this.file))) {
-        this.$message.warning('文件格式不正确')
-        return
+    createFileChunk(file, size = CHUNK_SIZE) {
+      const chunks = []
+      let cur = 0
+      while (cur < file.size) {
+        chunks.push({ index: cur, file: file.slice(cur, cur + size) })
+        cur += size
       }
+      return chunks
+    },
+    async calculateHashWorker() {
+      return new Promise((resolve) => {
+        this.worker = new Worker('/hash.js')
+        this.worker.postMessage({
+          chunks: this.chunks,
+        })
+        this.worker.onmessage = (e) => {
+          const { progress, hash } = e.data
+
+          this.hashProgress = Number(progress.toFixed(2))
+          if (hash) {
+            resolve(hash)
+          }
+        }
+      })
+    },
+    async calculateHashIdle() {},
+    async uploadFile() {
+      // if (!(await this.isImage(this.file))) {
+      //   this.$message.warning('文件格式不正确')
+      //   return
+      // }
+
+      this.chunks = this.createFileChunk(this.file)
+      // 文件的唯一标识，
+      const hash = await this.calculateHashWorker()
+      console.log('hash >>> ', hash)
+
+      return
 
       const form = new FormData()
       form.append('file', this.file)
