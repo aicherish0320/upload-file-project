@@ -1,5 +1,6 @@
 'use strict'
 
+const md5 = require('md5')
 const BaseController = require('./base')
 
 const createRule = {
@@ -8,6 +9,7 @@ const createRule = {
   password: { type: 'string' },
   captcha: { type: 'string' }
 }
+const HashSalt = 'aicherish0320'
 
 class UserController extends BaseController {
   async login() {
@@ -23,11 +25,29 @@ class UserController extends BaseController {
       return this.error(`参数校验失败：${error}`)
     }
     const { email, password, captcha, nickname } = ctx.request.body
+    // 验证码验证
     if (captcha.toUpperCase() !== ctx.session.captcha.toUpperCase()) {
       this.error('验证码错误')
-      return
+      return false
     }
-    this.success({ nickname })
+    // 邮箱验证
+    if (await this.checkEmail(email)) {
+      this.error('邮箱重复了')
+      return false
+    }
+    const ret = await ctx.model.User.create({
+      email,
+      nickname,
+      password: md5(password + HashSalt)
+    })
+    console.log(ret)
+    if (ret._id) {
+      this.message('注册成功')
+    }
+  }
+  async checkEmail(email) {
+    const user = await this.ctx.model.User.findOne({ email })
+    return user
   }
   async verify() {
     const { ctx } = this

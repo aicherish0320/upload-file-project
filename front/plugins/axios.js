@@ -6,6 +6,11 @@ const service = axios.create({
   timeout: 10000,
 })
 
+service.interceptors.response.use(async (response) => {
+  const { data } = response
+  return data
+})
+
 Vue.prototype.$http = service
 
 export const http = service
