@@ -52,8 +52,8 @@ export default {
               const r = v.toString(16).toUpperCase()
               return r
             })
-            // .map(v => v.padStart(2, '0'))
-            .join('')
+            .map((v) => v.padStart(2, '0'))
+            .join(' ')
 
           resolve(ret)
         }
@@ -64,13 +64,29 @@ export default {
       // 前面6个16进制, '47 49 46 38 39 61' '47 49 46 38 37 61'
       // 16 进制的转换
       const ret = await this.blobToString(file.slice(0, 6))
-      const isGif = ['474946383961', '474946383761'].indexOf(ret) > -1
+      const isGif = ['47 49 46 38 39 61', '47 49 46 38 37 61'].indexOf(ret) > -1
       return isGif
+    },
+    async isPng(file) {
+      const ret = await this.blobToString(file.slice(0, 8))
+      const isPng = ret === '89 50 4E 47 D A 1A 0A'
+      return isPng
+    },
+    async isJpg(file) {
+      const len = file.size
+      const start = await this.blobToString(file.slice(0, 2))
+      const tail = await this.blobToString(file.slice(-2, len))
+      const isJpg = start === 'FF D8' && tail === 'FF D9'
+      return isJpg
     },
     async isImage(file) {
       // 通过文件流来判定
       // 1. 先判定 gif
-      return await this.isGif(file)
+      return (
+        (await this.isGif(file)) ||
+        (await this.isPng(file)) ||
+        (await this.isJpg(file))
+      )
     },
     async uploadFile() {
       if (!(await this.isImage(this.file))) {
