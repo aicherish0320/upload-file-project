@@ -6,13 +6,18 @@ module.exports = (app) => {
 
   const UserSchema = new Schema(
     {
+      __v: {
+        type: Number,
+        select: false
+      },
       email: {
         type: String,
         required: true
       },
       password: {
         type: String,
-        required: true
+        required: true,
+        select: false
       },
       nickname: {
         type: String,
