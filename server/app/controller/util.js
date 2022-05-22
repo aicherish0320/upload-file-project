@@ -1,5 +1,6 @@
 'use strict'
 
+const fse = require('fs-extra')
 const svgCaptcha = require('svg-captcha')
 const BaseController = require('./base')
 
@@ -39,6 +40,13 @@ class UtilController extends BaseController {
     } else {
       this.error('发送失败')
     }
+  }
+
+  async uploadFile() {
+    const { ctx } = this
+    const file = ctx.request.files[0]
+    await fse.move(file.filepath, `${this.config.UPLOAD_DIR}/${file.filename}`)
+    this.success({ url: `/public/${file.filename}` })
   }
 }
 

@@ -40,7 +40,7 @@ class UserController extends BaseController {
       },
       app.config.jwt.secret,
       {
-        expiresIn: '1m'
+        expiresIn: '1d'
       }
     )
     this.success({ token, email, nickname: user.nickname })
@@ -69,7 +69,6 @@ class UserController extends BaseController {
       nickname,
       password: md5(password + HashSalt)
     })
-    console.log(ret)
     if (ret._id) {
       this.message('注册成功')
     }

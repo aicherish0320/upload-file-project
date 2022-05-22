@@ -118,7 +118,6 @@ export default {
             captcha: form.captcha,
           }
           let ret = await this.$http.post('/user/register', params)
-          console.log(ret)
           if (ret.code === 0) {
             this.$alert('注册成功', '成功', {
               confirmButtonText: '去登录',

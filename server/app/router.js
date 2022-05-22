@@ -11,6 +11,8 @@ module.exports = (app) => {
   // 验证码
   router.get('/captcha', controller.util.captcha)
   router.get('/sendCode', controller.util.sendCode)
+  // 文件上传
+  router.post('/uploadFile', controller.util.uploadFile)
 
   router.group(
     {
