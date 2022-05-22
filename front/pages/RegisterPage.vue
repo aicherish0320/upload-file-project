@@ -51,7 +51,7 @@ export default {
     return {
       form: {
         email: 'aic@aic.com',
-        nickname: 'aicherish',
+        nickname: '爱鹊絮',
         password: '12345',
         rePassword: '12345',
         captcha: '',
@@ -118,6 +118,7 @@ export default {
             captcha: form.captcha,
           }
           let ret = await this.$http.post('/user/register', params)
+          console.log(ret)
           if (ret.code === 0) {
             this.$alert('注册成功', '成功', {
               confirmButtonText: '去登录',
