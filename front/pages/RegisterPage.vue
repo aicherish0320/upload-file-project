@@ -50,7 +50,7 @@ export default {
   data() {
     return {
       form: {
-        email: 'aic@aic.com',
+        email: 'aicherish0320@163.com',
         nickname: '爱鹊絮',
         password: '12345',
         rePassword: '12345',

@@ -8,6 +8,7 @@ module.exports = (app) => {
   router.get('/', controller.home.index)
   // 验证码
   router.get('/captcha', controller.util.captcha)
+  router.get('/sendCode', controller.util.sendCode)
 
   router.group(
     {

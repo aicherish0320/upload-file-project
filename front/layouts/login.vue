@@ -33,6 +33,11 @@ export default {
           cursor: pointer;
         }
       }
+      .el-button {
+        width: 90px;
+        padding: 0;
+        line-height: 40px;
+      }
     }
   }
 }
