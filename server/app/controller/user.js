@@ -1,6 +1,7 @@
 'use strict'
 
 const md5 = require('md5')
+const jwt = require('jsonwebtoken')
 const BaseController = require('./base')
 
 const createRule = {
@@ -13,8 +14,31 @@ const HashSalt = 'aicherish0320'
 
 class UserController extends BaseController {
   async login() {
-    const { ctx } = this
-    ctx.body = 'hi, login'
+    const { ctx, app } = this
+    const { email, password, captcha } = ctx.request.body
+    if (captcha.toUpperCase() !== ctx.session.captcha.toUpperCase()) {
+      this.error('验证码错误')
+      return false
+    }
+    const user = await ctx.model.User.findOne({
+      email,
+      password: md5(password + HashSalt)
+    })
+    if (!user) {
+      this.error('用户名或密码错误')
+    }
+    // 用户信息加密成token
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email
+      },
+      app.config.jwt.secret,
+      {
+        expiresIn: '1h'
+      }
+    )
+    this.success({ token, email, nickname: user.nickname })
   }
   async register() {
     const { ctx } = this
