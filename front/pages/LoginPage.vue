@@ -113,9 +113,9 @@ export default {
             emailCode: form.emailCode,
           }
           let ret = await this.$http.post('/user/login', params)
-          console.log(ret)
           if (ret.code === 0) {
             this.$message.success('登录成功')
+            localStorage.setItem('upload_file_token', ret?.data.token)
             setTimeout(() => {
               this.$router.push('/')
             }, 500)
