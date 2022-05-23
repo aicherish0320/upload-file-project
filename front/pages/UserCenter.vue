@@ -7,19 +7,39 @@
     </div>
 
     <div>
-      <el-progress
+      <!-- <el-progress
         :stroke-width="20"
         :text-inside="true"
         :percentage="uploadProgress"
-      ></el-progress>
+      ></el-progress> -->
     </div>
-    <div>
+    <!-- <div>
       <p>计算哈希进度</p>
       <el-progress
         :stroke-width="20"
         :text-inside="true"
         :percentage="hashProgress"
       ></el-progress>
+    </div> -->
+
+    <div>
+      <div class="cube-container" :style="{ width: cubeWidth + 'px' }">
+        <div class="cube" v-for="chunk in chunks" :key="chunk.name">
+          <div
+            :class="{
+              uploading: chunk.progress > 0 && chunk.progress < 100,
+              success: chunk.progress === 100,
+              error: chunk.progress < 0,
+            }"
+          >
+            <i
+              v-if="chunk.progress > 0 && chunk.progress < 100"
+              class="el-icon-loading"
+              style="color: cyan"
+            ></i>
+          </div>
+        </div>
+      </div>
     </div>
 
     <el-button @click="uploadFile">上传</el-button>
@@ -27,17 +47,31 @@
 </template>
 
 <script>
-const CHUNK_SIZE = 1 * 1024 * 1024
-import { read } from 'fs'
+const CHUNK_SIZE = 5 * 1024 * 1024
 import sparkMD5 from 'spark-md5'
 export default {
   name: 'UserCenter',
   data() {
     return {
       file: null,
-      uploadProgress: 0,
+      // uploadProgress: 0,
       hashProgress: 0,
+      chunks: [],
     }
+  },
+  computed: {
+    cubeWidth() {
+      return Math.ceil(Math.sqrt(this.chunks.length)) * 16
+    },
+    uploadProgress() {
+      if (!this.file || this.chunks.length) {
+        return 0
+      }
+      const loaded = this.chunks
+        .map((item) => item.chunk.size * item.progress)
+        .reduce((acc, cur) => acc + cur, 0)
+      return Number((loaded / this.file.size).toFixed(2))
+    },
   },
   async mounted() {
     await this.$http.get('/user/info')
@@ -109,11 +143,11 @@ export default {
       }
       return chunks
     },
-    async calculateHashWorker() {
+    async calculateHashWorker(chunks) {
       return new Promise((resolve) => {
         this.worker = new Worker('/hash.js')
         this.worker.postMessage({
-          chunks: this.chunks,
+          chunks,
         })
         this.worker.onmessage = (e) => {
           const { progress, hash } = e.data
@@ -196,31 +230,63 @@ export default {
         }
       })
     },
+    async uploadChunks() {
+      const requests = this.chunks
+        .map((chunk, index) => {
+          // 转成 promise
+          const form = new FormData()
+          form.append('chunk', chunk.chunk)
+          form.append('hash', chunk.hash)
+          form.append('name', chunk.name)
+          return form
+        })
+        .map((form, index) =>
+          this.$http.post('/uploadFile', {
+            onUploadProgress: (progress) => {
+              this.chunks[index].progress = Number(
+                ((progress.loaded / progress.total) * 100).toFixed(2)
+              )
+            },
+          })
+        )
+      await Promise.all(requests)
+    },
     async uploadFile() {
       // if (!(await this.isImage(this.file))) {
       //   this.$message.warning('文件格式不正确')
       //   return
       // }
 
-      this.chunks = this.createFileChunk(this.file)
+      const chunks = this.createFileChunk(this.file)
       // 文件的唯一标识，
-      // const hash = await this.calculateHashWorker()
+      const hash = (this.hash = await this.calculateHashWorker(chunks))
       // const hash2 = await this.calculateHashIdle()
 
-      return
-
-      const form = new FormData()
-      form.append('file', this.file)
-      const ret = await this.$http.post('/uploadFile', form, {
-        onUploadProgress: (progress) => {
-          this.uploadProgress = Number(
-            ((progress.loaded / progress.total) * 100).toFixed(2)
-          )
-        },
+      this.chunks = chunks.map((chunk, index) => {
+        // 文件的名称 hash + index
+        const name = hash + '-' + index
+        return {
+          hash,
+          name,
+          index,
+          chunk: chunk.file,
+        }
       })
-      if (ret.code === 0) {
-        this.$message.success('图片上传成功')
-      }
+      // await this.uploadChunks()
+      console.log(this.chunks)
+
+      // const form = new FormData()
+      // form.append('file', this.file)
+      // const ret = await this.$http.post('/uploadFile', form, {
+      //   onUploadProgress: (progress) => {
+      //     this.uploadProgress = Number(
+      //       ((progress.loaded / progress.total) * 100).toFixed(2)
+      //     )
+      //   },
+      // })
+      // if (ret.code === 0) {
+      //   this.$message.success('图片上传成功')
+      // }
     },
     bindEvents() {
       const drag = this.$refs.drag
@@ -248,8 +314,25 @@ export default {
   line-height: 100px;
   border: 2px dashed #eee;
   text-align: center;
-  // &:hover {
-  //   border-color: red;
-  // }
+}
+.cube-container {
+  overflow: hidden;
+  .cube {
+    width: 14px;
+    height: 14px;
+    line-height: 12px;
+    border: 1px solid rgb(46, 45, 45);
+    background: #eee;
+    float: left;
+    .success {
+      background: green;
+    }
+    .uploading {
+      background: cyan;
+    }
+    .error {
+      background: red;
+    }
+  }
 }
 </style>
