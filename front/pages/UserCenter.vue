@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>UserCenter</h1>
+    <h1>用户中心</h1>
 
     <div ref="drag" id="drag">
       <input type="file" name="file" @change="handleFileChange" />

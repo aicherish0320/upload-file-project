@@ -19,7 +19,6 @@ self.onmessage = (e) => {
         self.postMessage({ progress: 100, hash: spark.end() })
       } else {
         progress += 100 / chunks.length
-        console.log('progress >>> ', progress)
         self.postMessage({ progress })
         loadNext(count)
       }
