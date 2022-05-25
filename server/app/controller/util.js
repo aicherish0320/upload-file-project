@@ -47,6 +47,9 @@ class UtilController extends BaseController {
     const { ext, size, hash } = this.ctx.request.body
     const filePath = path.resolve(this.config.UPLOAD_DIR, `${hash}.${ext}`)
     await ctx.service.tools.mergeFile(filePath, hash, size)
+    this.success({
+      url: `/public/${hash}.${ext}`
+    })
   }
   // 分片上传
   async uploadFile() {

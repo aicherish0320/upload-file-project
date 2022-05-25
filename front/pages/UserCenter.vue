@@ -251,7 +251,7 @@ export default {
           })
         )
       await Promise.all(requests)
-      await mergeRequest()
+      await this.mergeRequest()
     },
     async mergeRequest() {
       this.$http.post('/mergeFile', {
