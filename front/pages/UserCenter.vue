@@ -268,8 +268,20 @@ export default {
 
       const chunks = this.createFileChunk(this.file)
       // 文件的唯一标识，
-      const hash = (this.hash = await this.calculateHashWorker(chunks))
       // const hash2 = await this.calculateHashIdle()
+      const hash = (this.hash = await this.calculateHashWorker(chunks))
+
+      // 秒传，问一下后端 文件是否上传过，如果没有，是否存在切片
+      const resp = await this.$http.post('/checkFile', {
+        hash: this.hash,
+        ext: this.file.name.split('.').pop(),
+      })
+      const { uploaded, uploadedList } = resp.data
+
+      if (uploaded) {
+        // 秒传
+        return this.$message.success('秒传成功')
+      }
 
       this.chunks = chunks.map((chunk, index) => {
         // 文件的名称 hash + index
