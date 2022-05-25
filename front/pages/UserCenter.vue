@@ -31,11 +31,12 @@
               success: chunk.progress === 100,
               error: chunk.progress < 0,
             }"
+            :style="{ height: chunk.progress + '%' }"
           >
             <i
               v-if="chunk.progress > 0 && chunk.progress < 100"
               class="el-icon-loading"
-              style="color: cyan"
+              style="color: #0f0"
             ></i>
           </div>
         </div>
@@ -241,7 +242,7 @@ export default {
           return form
         })
         .map((form, index) =>
-          this.$http.post('/uploadFile', {
+          this.$http.post('/uploadFile', form, {
             onUploadProgress: (progress) => {
               this.chunks[index].progress = Number(
                 ((progress.loaded / progress.total) * 100).toFixed(2)
@@ -250,6 +251,14 @@ export default {
           })
         )
       await Promise.all(requests)
+      await mergeRequest()
+    },
+    async mergeRequest() {
+      this.$http.post('/mergeFile', {
+        ext: this.file.name.split('.').pop(),
+        size: CHUNK_SIZE,
+        hash: this.hash,
+      })
     },
     async uploadFile() {
       // if (!(await this.isImage(this.file))) {
@@ -270,10 +279,10 @@ export default {
           name,
           index,
           chunk: chunk.file,
+          progress: 0,
         }
       })
-      // await this.uploadChunks()
-      console.log(this.chunks)
+      await this.uploadChunks()
 
       // const form = new FormData()
       // form.append('file', this.file)
