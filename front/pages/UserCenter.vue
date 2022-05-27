@@ -135,6 +135,11 @@ export default {
         (await this.isJpg(file))
       )
     },
+    /**
+     * 创建文件碎片
+     * @param {File} file file
+     * @param {Number} size 文件碎片大小
+     */
     createFileChunk(file, size = CHUNK_SIZE) {
       const chunks = []
       let cur = 0
@@ -144,6 +149,10 @@ export default {
       }
       return chunks
     },
+    /**
+     * 通过 WebWorker 计算文件 hash
+     * @param {Array} chunks 文件碎片数组
+     */
     async calculateHashWorker(chunks) {
       return new Promise((resolve) => {
         this.worker = new Worker('/hash.js')
@@ -231,8 +240,9 @@ export default {
         }
       })
     },
-    async uploadChunks() {
+    async uploadChunks(uploadedList) {
       const requests = this.chunks
+        .filter((chunk) => uploadedList.indexOf(chunk.name) === -1)
         .map((chunk, index) => {
           // 转成 promise
           const form = new FormData()
@@ -291,10 +301,11 @@ export default {
           name,
           index,
           chunk: chunk.file,
-          progress: 0,
+          // 设置进度条 已经上传的 设为 100
+          progress: uploadedList.indexOf(name) > -1 ? 100 : 0,
         }
       })
-      await this.uploadChunks()
+      await this.uploadChunks(uploadedList)
 
       // const form = new FormData()
       // form.append('file', this.file)

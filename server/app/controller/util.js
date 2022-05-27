@@ -72,7 +72,7 @@ class UtilController extends BaseController {
   }
   async getUploadedList(dirPath) {
     return fse.existsSync(dirPath)
-      ? fse.readdir(dirPath).filter((name) => name[0] !== '.')
+      ? fse.readdirSync(dirPath).filter((name) => name[0] !== '.')
       : []
   }
   // 分片上传
