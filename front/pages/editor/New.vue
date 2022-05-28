@@ -58,7 +58,13 @@ export default {
         e.preventDefault()
       })
     },
-    submit() {},
+    async submit() {
+      const ret = await this.$http.post('/article/create', {
+        content: this.content,
+        compiledContent: this.compiledContent,
+      })
+      console.log('ret >>> ', ret)
+    },
     update(e) {
       clearTimeout(this.timer)
       this.timer = setTimeout(() => {
