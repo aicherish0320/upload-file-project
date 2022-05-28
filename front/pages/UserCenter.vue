@@ -249,9 +249,9 @@ export default {
           form.append('chunk', chunk.chunk)
           form.append('hash', chunk.hash)
           form.append('name', chunk.name)
-          return form
+          return { form, index: chunk.index }
         })
-        .map((form, index) =>
+        .map(({ form, index }) =>
           this.$http.post('/uploadFile', form, {
             onUploadProgress: (progress) => {
               this.chunks[index].progress = Number(
