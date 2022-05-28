@@ -251,17 +251,54 @@ export default {
           form.append('name', chunk.name)
           return { form, index: chunk.index }
         })
-        .map(({ form, index }) =>
-          this.$http.post('/uploadFile', form, {
-            onUploadProgress: (progress) => {
-              this.chunks[index].progress = Number(
-                ((progress.loaded / progress.total) * 100).toFixed(2)
-              )
-            },
-          })
-        )
-      await Promise.all(requests)
+      // .map(({ form, index }) =>
+      //   this.$http.post('/uploadFile', form, {
+      //     onUploadProgress: (progress) => {
+      //       this.chunks[index].progress = Number(
+      //         ((progress.loaded / progress.total) * 100).toFixed(2)
+      //       )
+      //     },
+      //   })
+      // )
+      // 异步并发控制
+      // 尝试申请 tcp 连接过多，也会造成卡顿
+      // await Promise.all(requests)
+      await this.sendRequest(requests)
       await this.mergeRequest()
+    },
+    async sendRequest(chunks, limit = 4) {
+      // limit 并发数
+      return new Promise(async (resolve, reject) => {
+        const len = chunks.length
+        console.log('len >>> ', len)
+
+        let count = 0
+
+        const start = async () => {
+          const task = chunks.shift()
+          if (task) {
+            const { form, index } = task
+            await this.$http.post('/uploadFile', form, {
+              onUploadProgress: (progress) => {
+                this.chunks[index].progress = Number(
+                  ((progress.loaded / progress.total) * 100).toFixed(2)
+                )
+              },
+            })
+            if (count === len - 1) {
+              resolve()
+            } else {
+              count++
+              start()
+            }
+          }
+        }
+
+        while (limit > 0) {
+          start()
+          limit -= 1
+        }
+      })
     },
     async mergeRequest() {
       this.$http.post('/mergeFile', {
@@ -275,6 +312,8 @@ export default {
       //   this.$message.warning('文件格式不正确')
       //   return
       // }
+
+      if (!this.file) return
 
       const chunks = this.createFileChunk(this.file)
       // 文件的唯一标识，
