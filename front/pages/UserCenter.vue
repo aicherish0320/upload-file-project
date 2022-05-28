@@ -249,7 +249,7 @@ export default {
           form.append('chunk', chunk.chunk)
           form.append('hash', chunk.hash)
           form.append('name', chunk.name)
-          return { form, index: chunk.index }
+          return { form, index: chunk.index, error: 0 }
         })
       // .map(({ form, index }) =>
       //   this.$http.post('/uploadFile', form, {
@@ -266,35 +266,57 @@ export default {
       await this.sendRequest(requests)
       await this.mergeRequest()
     },
+    // 上传报错
+    // 报错之后，进度条变红
+    // 一个切片重试失败三次 整体全部终止
     async sendRequest(chunks, limit = 4) {
       // limit 并发数
       return new Promise(async (resolve, reject) => {
         const len = chunks.length
-        console.log('len >>> ', len)
-
+        let isStop = false
         let count = 0
 
         const start = async () => {
+          if (isStop) return
+
           const task = chunks.shift()
           if (task) {
             const { form, index } = task
-            await this.$http.post('/uploadFile', form, {
-              onUploadProgress: (progress) => {
-                this.chunks[index].progress = Number(
-                  ((progress.loaded / progress.total) * 100).toFixed(2)
-                )
-              },
-            })
-            if (count === len - 1) {
-              resolve()
-            } else {
-              count++
-              start()
+            try {
+              await this.$http.post('/uploadFile', form, {
+                onUploadProgress: (progress) => {
+                  this.chunks[index].progress = Number(
+                    ((progress.loaded / progress.total) * 100).toFixed(2)
+                  )
+                },
+              })
+
+              if (count === len - 1) {
+                // 最后一个任务
+                resolve()
+              } else {
+                count++
+                // 启动下一个任务
+                start()
+              }
+            } catch (error) {
+              this.chunks[index].progress = -1
+              if (task.error < 3) {
+                task.error++
+                // 重试
+                chunks.unshift(task)
+                start()
+              } else {
+                // 结束
+                isStop = true
+                reject()
+              }
             }
           }
         }
 
         while (limit > 0) {
+          // 启动 limit 个任务
           start()
           limit -= 1
         }
