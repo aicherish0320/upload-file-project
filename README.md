@@ -51,3 +51,10 @@ async blobToString(blob) {
   })
 }
 ```
+
+# 富文本编辑器
+
+- `<div contenteditable="true"></div>`、`document.execCommand()`
+- 第三方库 tinyMce、wangEditor
+- 第三方定制 `slate.js`
+- 专门的开发团队，自己定制，非常复杂
