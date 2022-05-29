@@ -20,4 +20,15 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss">
+.kkb-container {
+  width: 980px;
+  height: 80vh;
+  margin: 0 auto;
+  background: #fff;
+  padding: 20px;
+}
+.el-menu--horizontal > .el-menu-item.is-active {
+  border: none;
+}
+</style>
